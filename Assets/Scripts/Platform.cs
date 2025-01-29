@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using Random = UnityEngine.Random;
-public class PlatformGenerator : MonoBehaviour
+public class Platform : MonoBehaviour
 {
     public GameObject tilePrefab; // Префаб звичайної плитки
     public GameObject triggerTilePrefab; // Префаб невидимої плитки-тригера

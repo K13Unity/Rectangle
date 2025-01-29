@@ -100,7 +100,6 @@ namespace Cube
 
         private IEnumerator Roll(Transform pivot, Vector3 direction)
         {
-             if (isFalling) yield break;
             isRolling = true;
             
             float angle = 0f;
@@ -129,9 +128,12 @@ namespace Cube
             UpdateContactPoints();
         }
 
-        public void SetSoundManager(SoundManager soundManager)
+        public void Init(SoundManager soundManager)
         {
             _soundManager = soundManager;
+            _soundManager.PlayRollSound();
+            isDropping = false;
+            UpdateContactPoints();
         }
 
          public void EnableRigidbody()

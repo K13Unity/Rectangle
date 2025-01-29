@@ -10,7 +10,6 @@ public class TriggerTile : MonoBehaviour
         if (_cubeController != null)
         {
             _cubeController.EnableRigidbody(); 
-            
         }
     }
 }
