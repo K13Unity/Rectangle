@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cube;
+using System;
 
 public class PlatformGenerator : MonoBehaviour
 {
@@ -16,6 +17,7 @@ public class PlatformGenerator : MonoBehaviour
     List<GameObject> tiles = new List<GameObject>();
     List<TriggerTile> triggerTiles = new List<TriggerTile>();
 
+    public event Action OnPlatformGenerationComplete;
 
     public void GeneratePlatform(int[,] layout)
     {
@@ -57,7 +59,8 @@ public class PlatformGenerator : MonoBehaviour
     private TriggerTile CreateTriggerTile(int x, int z)
     {
         var tile = Instantiate(triggerTilePrefab, new Vector3(x, 0, z), Quaternion.identity, transform);
-         //додати піписку на подію
+        TriggerTile trigger = tile.GetComponent<TriggerTile>();
+        trigger.OnPlayerEnter += ReportDestruction;
         triggerTiles.Add(tile);
         return tile;
     }
@@ -93,7 +96,7 @@ public class PlatformGenerator : MonoBehaviour
             for (int i = 0; i < 3; i++)
             {
                 if (remainingTiles.Count == 0) break;
-                int randomIndex = Random.Range(0, remainingTiles.Count);
+                int randomIndex = UnityEngine.Random.Range(0, remainingTiles.Count);
                 selectedTiles.Add(remainingTiles[randomIndex]);
                 remainingTiles.RemoveAt(randomIndex);
             }
@@ -109,6 +112,103 @@ public class PlatformGenerator : MonoBehaviour
         player.Init(soundManager);
         
     }
-    //StartCoroutine(RiseTile(tile, new Vector3(pos.x, 0f, pos.y)));
+    private void ReportDestruction()
+    {
+        OnPlatformGenerationComplete?.Invoke();
+    }
     
+    public void DestroyPlatform()
+    {
+        RemoveTriggerTiles();
+        StartCoroutine(DestroyTiles());
+    }
+
+    private void RemoveTriggerTiles()
+    {
+        foreach (var triggerTile in triggerTiles)
+        {
+            triggerTile.OnPlayerEnter -= ReportDestruction;
+            Destroy(triggerTile.gameObject);
+        }
+        triggerTiles.Clear();
+    }
+    // Метод для знищення гравця
+    private void DestroyPlayer()
+    {
+        Destroy(player.gameObject);
+    }
+
+   private IEnumerator DestroyTiles()
+    {
+        yield return new WaitForSeconds(0.5f); 
+        yield return StartCoroutine(LowerTilesSequentially()); 
+        yield return StartCoroutine(DestroyAllTiles()); 
+        DestroyPlayer(); // 💥 
+    }
+
+    // 🔹 Вибирає 3 випадкові плитки для опускання
+    private List<GameObject> SelectTilesToLower(List<GameObject> remainingTiles)
+    {
+        List<GameObject> selectedTiles = new List<GameObject>();
+
+        for (int i = 0; i < 3; i++)
+        {
+            if (remainingTiles.Count == 0) break; 
+            int randomIndex = UnityEngine.Random.Range(0, remainingTiles.Count); 
+            selectedTiles.Add(remainingTiles[randomIndex]);
+            remainingTiles.RemoveAt(randomIndex);
+        }
+
+        return selectedTiles;
+    }
+
+    // 🔹 Послідовно опускає всі плитки перед їх видаленням
+    private IEnumerator LowerTilesSequentially()
+    {
+        List<GameObject> remainingTiles = new List<GameObject>(tiles); // 📋 Копіюємо список плиток
+
+        while (remainingTiles.Count > 0) // 
+        {
+            List<GameObject> selectedTiles = SelectTilesToLower(remainingTiles); 
+
+            foreach (var tile in selectedTiles)
+            {
+                if (tile != null)
+                {
+                    StartCoroutine(LowerTile(tile, new Vector3(tile.transform.position.x, riseHeight, tile.transform.position.z)));
+                }
+            }
+
+            yield return new WaitForSeconds(riseInterval); 
+        }
+    }
+
+    // 🔹 Видаляє всі плитки після завершення анімацій
+    private IEnumerator DestroyAllTiles()
+    {
+        yield return new WaitForSeconds(riseInterval); 
+
+        for (int i = tiles.Count - 1; i >= 0; i--) // 
+        {
+            if (tiles[i] != null)
+            {
+                Destroy(tiles[i]); 
+            }
+        }
+
+        tiles.Clear(); 
+    }
+    
+    private IEnumerator LowerTile(GameObject tile, Vector3 targetPosition)
+    {
+        float startTime = Time.time;
+        Vector3 startPosition = tile.transform.position;
+
+        while (tile != null && tile.transform.position != targetPosition)
+        {
+            float progress = (Time.time - startTime) * riseSpeed;
+            tile.transform.position = Vector3.Lerp(startPosition, targetPosition, progress);
+            yield return null;
+        }
+    }
 }

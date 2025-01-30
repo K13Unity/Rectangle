@@ -307,10 +307,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tilePrefab: {fileID: 7672555334956983728, guid: e0938160bb005354684ecac014ae1f03, type: 3}
-  triggerTilePrefab: {fileID: 7990796435916656047, guid: 185c1af519e8ab84095072793aab1083, type: 3}
-  riseSpeed: 2
+  triggerTilePrefab: {fileID: -2844136748906945409, guid: 185c1af519e8ab84095072793aab1083, type: 3}
+  playerPrefab: {fileID: 8533294237552877612, guid: bcfa390d398abe84889d4a351b5a7719, type: 3}
+  soundManager: {fileID: 1404786491}
+  riseSpeed: 3
   riseHeight: -10
-  riseInterval: 0.5
+  riseInterval: 0.1
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
