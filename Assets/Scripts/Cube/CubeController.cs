@@ -108,7 +108,7 @@ namespace Cube
 
             if (_soundManager != null && !isFalling)
             {
-                _soundManager.PlayRollSound(); // Відтворюємо звук тільки якщо персонаж не падає
+                PlaySound();
             }
 
 
@@ -131,7 +131,7 @@ namespace Cube
         public void Init(SoundManager soundManager)
         {
             _soundManager = soundManager;
-            _soundManager.PlayRollSound();
+            PlaySound();
             isDropping = false;
             UpdateContactPoints();
         }
@@ -155,6 +155,14 @@ namespace Cube
                 isFalling = false;
                 _rigidbody.isKinematic = true; 
                 _rigidbody.useGravity = false; 
+            }
+        }
+        
+        public void PlaySound()
+        {
+            if (_soundManager != null)
+            {
+                _soundManager.PlayRollSound();
             }
         }
     }

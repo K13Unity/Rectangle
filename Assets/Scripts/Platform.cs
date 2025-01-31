@@ -13,16 +13,16 @@ public class Platform : MonoBehaviour
     public int tilesPerGroup = 3; // Кількість плиток у групі
     public event Action OnPlatformGenerationComplete; // Подія завершення генерації платформи
 
-    List<int[,]> levels = new List<int[,]>();
-    List<GameObject> tiles = new List<GameObject>();
+    List<int[,]> _levels = new List<int[,]>();
+    List<GameObject> _tiles = new List<GameObject>();
     // Додайте подію завершення генерації платформи
     
 
     void Start()
     {
-        levels.Add(platformLayout);
-        levels.Add(platformLayout1);
-        StartCoroutine(GeneratePlatform(levels[0])); // Використовуємо перший макет
+        _levels.Add(platformLayout);
+        _levels.Add(platformLayout1);
+        StartCoroutine(GeneratePlatform(_levels[0])); // Використовуємо перший макет
     }
 
     public IEnumerator GeneratePlatform(int[,] layout)
@@ -63,7 +63,7 @@ public class Platform : MonoBehaviour
                 Vector2Int pos = tilePositions[i + j];
                 Vector3 startPosition = new Vector3(pos.x, riseHeight, pos.y);
                 GameObject tile = Instantiate(tilePrefab, startPosition, Quaternion.identity, transform);
-                tiles.Add(tile);
+                _tiles.Add(tile);
 
                 StartCoroutine(RiseTile(tile, new Vector3(pos.x, 0f, pos.y)));
             }
@@ -76,7 +76,7 @@ public class Platform : MonoBehaviour
         {
             Vector3 startPosition = new Vector3(pos.x, riseHeight, pos.y);
             GameObject triggerTile = Instantiate(triggerTilePrefab, startPosition, Quaternion.identity, transform);
-            tiles.Add(triggerTile);
+            _tiles.Add(triggerTile);
 
             StartCoroutine(RiseTile(triggerTile, new Vector3(pos.x, 0f, pos.y)));
         }
@@ -112,7 +112,7 @@ public class Platform : MonoBehaviour
     }
     bool AreAllTilesInPosition()
     {
-        foreach (GameObject tile in tiles)
+        foreach (GameObject tile in _tiles)
         {
             if (tile.transform.position.y != 0f) // Перевіряємо, чи плитка на місці
             {

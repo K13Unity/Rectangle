@@ -1,15 +1,18 @@
 using UnityEngine;
 using Cube;
+using System;
 
 public class WinTile : MonoBehaviour
 {
+    public event Action OnPlayerWin;
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log("Win");
-        CubeController _cubeController = other.GetComponentInParent<CubeController>();
-        if (_cubeController != null)
+        CubeController cubeController = other.GetComponentInParent<CubeController>();
+        if (cubeController != null)
         {
-            _cubeController.EnableRigidbody();
+            cubeController.EnableRigidbody();
+            OnPlayerWin?.Invoke();
         }
     }
 }

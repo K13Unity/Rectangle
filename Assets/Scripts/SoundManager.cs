@@ -7,13 +7,9 @@ public class SoundManager : MonoBehaviour
     // Метод для відтворення звуку
     public void PlayRollSound()
     {
-        if (audioSource != null && audioSource.clip != null)
+        if (audioSource && audioSource.clip)
         {
             audioSource.Play(); // Відтворюємо звук
-        }
-        else
-        {
-            Debug.LogWarning("AudioSource або AudioClip не налаштовані!");
         }
     }
 }

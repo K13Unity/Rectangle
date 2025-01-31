@@ -1,126 +1,104 @@
-using UnityEngine;
 using System.Collections;
-using Cube;
 using System.Collections.Generic;
+using UnityEngine;
 
-public class LevelManager : MonoBehaviour
+namespace Scripts
 {
-    [SerializeField] PlatformGenerator platformGenerator;
-
-    private int currentLevelIndex = 0; // Індекс поточного рівня
-    List<int[,]> levels = new List<int[,]>();
-
-    void Start()
+    public class LevelManager : MonoBehaviour
     {
-        levels.Add(platformLayout);
-        levels.Add(platformLayout1);
-        var platformData = levels[currentLevelIndex];
-        platformGenerator.GeneratePlatform(platformData);
-        // Підписуємося на подію завершення генерації платформи
-        // platformGenerator.OnPlatformGenerationComplete += OnPlatformGenerationComplete;
-        // LoadLevel(currentLevelIndex); // Завантажуємо перший рівень
-    }
+        private SaveManager _saveManager;
+        [SerializeField] private PlatformGenerator platformGenerator;
 
-    // void LoadLevel(int levelIndex)
-    // {
-    //     // Видаляємо попередній рівень, якщо він є
-    //     if (currentLevelObject != null)
-    //     {
-    //         Destroy(currentLevelObject);
-    //     }
+        private int _currentLevelIndex = 0; // Індекс поточного рівня
+        private List<int[,]> levels = new List<int[,]>();
 
-    //     // Створюємо новий об'єкт для рівня
-    //     currentLevelObject = new GameObject("Level " + levelIndex);
-    //     LevelManager level = levels[levelIndex];
+        private void Start()
+        {
+            _saveManager = new SaveManager();
+            _currentLevelIndex = _saveManager.GetLevelIndex();
+            levels.Add(_platformLayout);
+            levels.Add(_platformLayout1);
+            var platformData = levels[_currentLevelIndex];
+            platformGenerator.GeneratePlatform(platformData);
+            platformGenerator.OnTriggerTilleTreggered += OnTriggerTilleTriggeret;
+            platformGenerator.OnWinTileTriggerTriggered += OnWinTileTriggerEnter;
+            // Підписуємося на подію завершення генерації платформи
+            // platformGenerator.OnPlatformGenerationComplete += OnPlatformGenerationComplete;
+            // LoadLevel(currentLevelIndex); // Завантажуємо перший рівень
+        }
 
-    //     // Генеруємо платформу
-    //     platformGenerator.GeneratePlatform(level.platformLayout);
+        private void Update(){
+            if(Input.GetKeyDown(KeyCode.R))
+            {
+                _saveManager.ResetProgress();
+            }
+        }
 
-    //     // Розміщуємо ціль
-    //     Instantiate(goalPrefab, level.goalPosition, Quaternion.identity);
+        private void OnTriggerTilleTriggeret()
+        {
+            StartCoroutine(RestartLevel());
+        }
+        private void OnWinTileTriggerEnter()
+        {
+            StartCoroutine(OnLevelComplete());
+        }
+        private IEnumerator OnLevelComplete()
+        {
+            yield return platformGenerator.DestroyPlatform();
+            _currentLevelIndex++;
+            _saveManager.SaveLevelIndex(_currentLevelIndex);
+            platformGenerator.GeneratePlatform(levels[_currentLevelIndex]);
+        }
 
-    //     // Прибираємо створення персонажа тут, воно буде в OnPlatformGenerationComplete
-    // }
+        private IEnumerator RestartLevel()
+        {
+            yield return platformGenerator.DestroyPlatform();
+            platformGenerator.GeneratePlatform(levels[_currentLevelIndex]);
+        }
 
-    // void OnPlatformGenerationComplete()
-    // {
-    //     // Створюємо гравця вище стартової позиції
-    //     Vector3 startPosition = levels[currentLevelIndex].startPosition;
-    //     Vector3 spawnPosition = startPosition + Vector3.up * 10f; // Висота 10 одиниць вище стартової позиції
-    //     CubeController player = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-    //     player.SetSoundManager(_soundManager);
-
-    //     // Запускаємо корутин для падіння персонажа
-    //     StartCoroutine(DropPlayer(player, startPosition));
-    // }
-
-    // IEnumerator DropPlayer(CubeController player, Vector3 targetPosition)
-    // {
-    //     float startTime = Time.time;
-    //     Vector3 startPosition = player.transform.position;
-    //     float dropSpeed = 4f; // Швидкість падіння
-    //     _soundManager.PlayRollSound();
-
-    //     while (player.transform.position.y > targetPosition.y)
-    //     {
-    //         float progress = (Time.time - startTime) * dropSpeed;
-    //         player.transform.position = Vector3.Lerp(startPosition, targetPosition, progress);
-    //         yield return null;
-    //     }
-    //     // Після падіння встановлюємо точну позицію
-    //     player.transform.position = targetPosition;
-    //     // Оновлюємо точки контакту після падіння
-    //     player.UpdateContactPoints();
-    //     player.UnlockMovement();
-    // }
-
-    // public void NextLevel()
-    // {
-    //     currentLevelIndex++;
-    //     if (currentLevelIndex < levels.Length)
-    //     {
-    //         LoadLevel(currentLevelIndex);
-    //     }
-    //     else
-    //     {
-    //         Debug.Log("Вітаємо! Ви завершили всі рівні!");
-    //     }
-    // }
-     private int[,] platformLayout = new int[,]
-    {
-        {0, 0, 0, 0, 2, 2, 2, 2, 0, 0},
-        {0, 0, 0, 2, 0, 0, 0, 0, 0, 0},
-        {0, 0, 2, 0, 0, 1, 1, 1, 0, 2},
-        {0, 0, 2, 0, 1, 1, 3, 1, 0, 2},
-        {0, 0, 2, 0, 1, 1, 1, 1, 0, 2},
-        {0, 0, 2, 0, 1, 1, 1, 0, 0, 0},
-        {0, 2, 0, 0, 1, 1, 1, 0, 2, 0},
-        {0, 0, 0, 1, 1, 1, 1, 0, 2, 0},
-        {2, 0, 1, 1, 1, 1, 1, 0, 2, 0},
-        {2, 0, 1, 4, 1, 1, 0, 0, 0, 0},
-        {2, 0, 1, 1, 1, 1, 0, 2, 0, 0},
-        {0, 0, 0, 1, 1, 0, 0, 0, 0, 0},
-        {0, 2, 0, 0, 0, 0, 2, 0, 0, 0},
-        {0, 0, 0, 2, 2, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-    };
-
-    private int[,] platformLayout1 = new int[,]
-    {
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 },
-        {2, 2, 2, 2, 2, 2, 2, 2 }
         
-    };
+        private int[,] _platformLayout = new int[,]
+        {
+            {0, 0, 0, 0, 2, 2, 2, 2, 0, 0},
+            {0, 0, 0, 2, 0, 0, 0, 0, 0, 0},
+            {0, 0, 2, 0, 0, 1, 1, 1, 0, 2},
+            {0, 0, 2, 0, 1, 1, 3, 1, 0, 2},
+            {0, 0, 2, 0, 1, 1, 1, 1, 0, 2},
+            {0, 0, 2, 0, 1, 1, 1, 0, 0, 0},
+            {0, 2, 0, 0, 1, 1, 1, 0, 2, 0},
+            {0, 0, 0, 1, 1, 1, 1, 0, 2, 0},
+            {2, 0, 1, 1, 1, 1, 1, 0, 2, 0},
+            {2, 0, 1, 4, 1, 1, 0, 0, 0, 0},
+            {2, 0, 1, 1, 1, 1, 0, 2, 0, 0},
+            {0, 0, 0, 1, 1, 0, 0, 0, 0, 0},
+            {0, 2, 0, 0, 0, 0, 2, 0, 0, 0},
+            {0, 0, 0, 2, 2, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        };
+
+        private int[,] _platformLayout1 = new int[,]
+        {
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+       
+        };
+    }
 }
